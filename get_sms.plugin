@@ -1,4 +1,4 @@
-#!name = 短信转发LOON版(iOS<17专用)
+#!name = 短信转发Loon版(iOS<17)
 #!desc = MitM->腾讯手机管家->获取短信->转发
 #!author = akinachan & Gemini & Claude
 #!version = 2.4.0
@@ -25,7 +25,7 @@ timeout_seconds = select,"10","20","30",tag=请求超时,desc=网络请求的超
 
 [Script]
 [Script]
-http-request ^https?:\/\/jprx\.m\.qq\.com\/forward.* script-path=https://raw.githubusercontent.com/akinachann/SMSForwarder_LOON/refs/heads/main/get_sms.js, requires-body=true, timeout=20, enable=true, tag=获取腾讯手机管家短信转发
+http-request ^https?:\/\/jprx\.m\.qq\.com\/forward.* script-path=https://gh-proxy.org/https://raw.githubusercontent.com/akinachann/SMSForwarder_LOON/refs/heads/main/get_sms.js, requires-body=true, timeout=20, enable=true, tag=获取腾讯手机管家短信转发
 
 [MITM]
 hostname = jprx.m.qq.com
