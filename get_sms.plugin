@@ -1,6 +1,6 @@
-#!name = 获取腾讯手机管家短信转发
-#!desc = 短信转发（iOS<17曲线救国版）-多通道同时转发
-#!author = akinachan&Gemini&Claude
+#!name = 短信转发LOON版(iOS<17专用)
+#!desc = MitM->腾讯手机管家->获取短信->转发
+#!author = akinachan & Gemini & Claude
 #!version = 2.4.0
 #!date = 2026-03-26
 #!homePage = https://github.com/akinachann/SMSForwarder_LOON
@@ -13,8 +13,8 @@ update-interval = 86400
 timeout = 30
 
 [Argument]
-tg_token = input,"",tag=Telegram配置,desc=格式为: BotToken.ChatID (留空则不转发到TG)
-feishu_token = input,"",tag=飞书配置,desc=填入飞书Webhook地址末尾的Hook Token (留空则不转发到飞书)
+tg_token = input,"格式为：123456789:AAFxxxxxxx.-100123456789",tag=Telegram配置,desc=格式为: BotToken.ChatID (留空则不转发到Telegram)
+feishu_token = input,"",tag=飞书配置,desc=填入完整的飞书Webhook地址 (留空则不转发到飞书)
 
 allsms = switch,true,tag=转发所有短信,desc=开启则转发所有短信，关闭则仅转发匹配正则的短信
 regexstr = input,"码|碼|code|\\d{4,}",tag=正则匹配规则,desc=用于匹配验证码短信的正则表达式（需转义）
