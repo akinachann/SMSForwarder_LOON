@@ -1,5 +1,5 @@
 // 获取腾讯手机管家短信转发脚本 v2.4.0 (纯净双通道版)
-// 作者: akinachan & Gemini和Claude
+// 作者: akinachan & Gemini & Claude
 
 const SCRIPT_VERSION = '2.4.0';
 const SCRIPT_DATE = '2026-03-26';
@@ -117,13 +117,10 @@ function sendToTelegram(tokenkey, smsData) {
     return sendHttpRequest(url, JSON.stringify({ chat_id: chatid, text: text, parse_mode: 'Markdown' }), 'Telegram');
 }
 
-// 发送到飞书自定义机器人
-// tokenetc 格式: 飞书 webhook 地址末尾的 hook token
-// 即 https://open.feishu.cn/open-apis/bot/v2/hook/{此处} 的值
-// 注意: 若飞书机器人开启了签名校验，请改用关键词校验，添加关键词"TX短信"即可
-function sendToFeishu(hooktoken, smsData) {
-    const url = `https://open.feishu.cn/open-apis/bot/v2/hook/${hooktoken}`;
-    const text = `📱 腾讯手机管家短信转发\n发件人: ${smsData.sender}\n内  容: ${smsData.message}`;
+// 发送到飞书机器人
+function sendToFeishu(webhookUrl, smsData) {
+    const url = webhookUrl.trim(); 
+    const text = `📱 腾讯手机管家短信转发\n发件人: ${smsData.sender}\n内容: ${smsData.message}`;
     return sendHttpRequest(url, JSON.stringify({ msg_type: 'text', content: { text: text } }), '飞书');
 }
 
