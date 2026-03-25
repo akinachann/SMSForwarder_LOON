@@ -1,17 +1,14 @@
-// 获取TX短信转发脚本 v2.3.0 (支持多通道同时转发)
-// 根据 Loon 官方文档重构
+// 获取腾讯手机管家短信转发脚本 v2.4.0 (纯净双通道版)
+// 作者: akinachan & Gemini和Claude
 
-const SCRIPT_VERSION = '2.3.0';
+const SCRIPT_VERSION = '2.4.0';
 const SCRIPT_DATE = '2026-03-26';
 
 console.log(`📱 短信转发脚本启动 v${SCRIPT_VERSION} (${SCRIPT_DATE})`);
 
-// 获取各个平台的独立配置 (留空表示不启用)
+// 获取独立配置 (留空表示不启用)
 let tgToken = $argument.tg_token || '';
 let feishuToken = $argument.feishu_token || '';
-let dingToken = $argument.ding_token || '';
-let serverChanKey = $argument.server_key || '';
-let chenxingUrl = $argument.chenxing_url || '';
 
 // 获取通用配置
 let allsms = $argument.allsms !== undefined ? $argument.allsms : true;
@@ -68,18 +65,6 @@ async function main() {
         console.log('📤 启用 飞书 转发');
         tasks.push(sendToFeishu(feishuToken, smsData));
     }
-    if (dingToken) {
-        console.log('📤 启用 钉钉 转发');
-        tasks.push(sendToDingTalk(dingToken, smsData));
-    }
-    if (serverChanKey) {
-        console.log('📤 启用 Server酱 转发');
-        tasks.push(sendToServerChan(serverChanKey, smsData));
-    }
-    if (chenxingUrl) {
-        console.log('📤 启用 辰星短信 转发');
-        tasks.push(sendToChenXing(chenxingUrl, smsData));
-    }
 
     if (tasks.length === 0) {
         console.log('⚠️ 未配置任何有效的转发目标 (Token均为空)');
@@ -94,7 +79,7 @@ async function main() {
     $done();
 }
 
-// 获取短信数据 (保持原样)
+// 获取短信数据
 function getSmsData() {
     if (typeof $request !== 'undefined' && $request.body) {
         try {
@@ -113,8 +98,11 @@ function getSmsData() {
     return { sender: '10086', message: '【测试】您的验证码是123456，请在5分钟内输入。' };
 }
 
-// --- 以下为各平台组装数据的函数 ---
-
+// 发送到 Telegram
+// tokenetc 格式: BotToken.ChatID
+// BotToken 形如 123456789:AAFxxxxxxx，ChatID 形如 -100123456789
+// 完整示例: 123456789:AAFxxxxxxx.-100123456789
+// 以最后一个 . 为分隔符，前段为 BotToken，后段为 ChatID
 function sendToTelegram(tokenkey, smsData) {
     const lastDot = tokenkey.lastIndexOf('.');
     if (lastDot === -1) {
@@ -124,50 +112,22 @@ function sendToTelegram(tokenkey, smsData) {
     const bottoken = tokenkey.substring(0, lastDot).trim();
     const chatid = tokenkey.substring(lastDot + 1).trim();
     const url = `https://api.telegram.org/bot${bottoken}/sendMessage`;
-    const text = `📱 **TX短信转发**\n发件人: \`${smsData.sender}\`\n内  容: ${smsData.message}`;
+    const text = `📱 **腾讯手机管家短信转发**\n发件人: \`${smsData.sender}\`\n内  容: ${smsData.message}`;
     
     return sendHttpRequest(url, JSON.stringify({ chat_id: chatid, text: text, parse_mode: 'Markdown' }), 'Telegram');
 }
 
+// 发送到飞书自定义机器人
+// tokenetc 格式: 飞书 webhook 地址末尾的 hook token
+// 即 https://open.feishu.cn/open-apis/bot/v2/hook/{此处} 的值
+// 注意: 若飞书机器人开启了签名校验，请改用关键词校验，添加关键词"TX短信"即可
 function sendToFeishu(hooktoken, smsData) {
     const url = `https://open.feishu.cn/open-apis/bot/v2/hook/${hooktoken}`;
-    const text = `📱 TX短信转发\n发件人: ${smsData.sender}\n内  容: ${smsData.message}`;
+    const text = `📱 腾讯手机管家短信转发\n发件人: ${smsData.sender}\n内  容: ${smsData.message}`;
     return sendHttpRequest(url, JSON.stringify({ msg_type: 'text', content: { text: text } }), '飞书');
 }
 
-function sendToDingTalk(config, smsData) {
-    const configParts = config.split('.');
-    if (configParts.length < 2) return Promise.resolve();
-    const keyword = configParts[0].trim();
-    const token = configParts[1].trim();
-    const url = `https://oapi.dingtalk.com/robot/send?access_token=${token}`;
-    const text = `${keyword}\n发件人:${smsData.sender}\n内容:${smsData.message}`;
-    return sendHttpRequest(url, JSON.stringify({ msgtype: "text", text: { content: text } }), '钉钉');
-}
-
-function sendToServerChan(sendkey, smsData) {
-    const url = String(sendkey).startsWith('sctp')
-        ? `https://${sendkey.match(/^sctp(\d+)t/)[1]}.push.ft07.com/send/${sendkey}.send`
-        : `https://sctapi.ftqq.com/${sendkey}.send`;
-    return sendHttpRequest(url, JSON.stringify({ title: "TX短信转发", desp: `发件人:${smsData.sender}\n\n内容:${smsData.message}` }), 'Server酱');
-}
-
-function sendToChenXing(server, smsData) {
-    let url = server.startsWith('http') ? server : `https://${server}`;
-    if (!url.endsWith('/sms')) url += '/sms';
-    const codeMatch = smsData.message.match(/验证码[：:]?(\d{6})/);
-    const body = {
-        sender: smsData.sender,
-        message: smsData.message,
-        code: codeMatch ? codeMatch[1] : '',
-        timestamp: Date.now(),
-        source: "loon_sms",
-        version: SCRIPT_VERSION
-    };
-    return sendHttpRequest(url, JSON.stringify(body), '辰星短信');
-}
-
-// 核心网络请求封装 (返回 Promise，不再直接调用 $done)
+// 核心网络请求封装
 function sendHttpRequest(url, body, platformName, currentRetry = 0) {
     return new Promise((resolve) => {
         const requestConfig = {
