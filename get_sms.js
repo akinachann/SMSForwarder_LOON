@@ -1,4 +1,4 @@
-// 获取腾讯手机管家短信转发脚本 v2.4.0 (纯净双通道版)
+// 获取腾讯手机管家短信转发脚本 v2.4.0
 // 作者: akinachan & Gemini & Claude
 
 const SCRIPT_VERSION = '2.4.0';
@@ -118,8 +118,21 @@ function sendToTelegram(tokenkey, smsData) {
 }
 
 // 发送到飞书机器人
-function sendToFeishu(webhookUrl, smsData) {
-    const url = webhookUrl.trim(); 
+function sendToFeishu(feishuInput, smsData) {
+    let url = feishuInput.trim(); 
+    
+    // 如果用户填写的不是 http 开头的完整链接，自动帮他拼接
+    if (!url.startsWith('http')) {
+        // 兼容一下如果用户习惯性带上了 hook/ 的情况
+        url = url.replace(/^hook\//, '');
+        url = `https://open.feishu.cn/open-apis/bot/v2/hook/${url}`;
+    }
+    
+    // 关键修复：清除所有可能引发 NSURLErrorDomain 的不可见字符或非法字符
+    url = url.replace(/[^a-zA-Z0-9\-._~:/?#[\]@!$&'()*+,;=]/g, '');
+    
+    console.log(`📍 飞书最终请求地址: ${url}`); // 打印出来，如果出错一眼就能看清 URL 对不对
+    
     const text = `📱 腾讯手机管家短信转发\n发件人: ${smsData.sender}\n内容: ${smsData.message}`;
     return sendHttpRequest(url, JSON.stringify({ msg_type: 'text', content: { text: text } }), '飞书');
 }
