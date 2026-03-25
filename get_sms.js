@@ -283,10 +283,7 @@ function sendToTelegram(tokenkey, smsData) {
 function sendToFeishu(hooktoken, smsData) {
     console.log('🔧 飞书通知开始');
 
-    // 自动判断：是完整 URL 就直接用，否则拼接
-    const url = hooktoken.startsWith('http') 
-        ? hooktoken 
-        : `https://open.feishu.cn/open-apis/bot/v2/hook/${hooktoken}`;
+    const url = `https://open.feishu.cn/open-apis/bot/v2/hook/${hooktoken}`;
     const text = `TX短信转发\n发送号码: ${smsData.sender}\n短信内容: ${smsData.message}`;
 
     const requestData = {
