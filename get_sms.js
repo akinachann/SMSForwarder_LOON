@@ -1,12 +1,11 @@
 // 获取腾讯手机管家短信转发脚本 v2.4.2 (纯净双通道防弹版)
-// 作者: akinachan & Gemini & Claude
+// 作者: akinachan&Gemini&Claude
 
 const SCRIPT_VERSION = '2.4.2';
 const SCRIPT_DATE = '2026-03-26';
 
 console.log(`📱 短信转发脚本启动 v${SCRIPT_VERSION} (${SCRIPT_DATE})`);
 
-// 关键修复 1：安全获取参数对象，防止未定义报错 (兼容编辑器直接运行空跑测试)
 const args = typeof $argument !== 'undefined' ? $argument : {};
 
 // 获取独立配置 (留空表示不启用)
@@ -111,7 +110,7 @@ function sendToTelegram(tokenkey, smsData) {
     const bottoken = tokenkey.substring(0, lastDot).trim();
     const chatid = tokenkey.substring(lastDot + 1).trim();
     const url = `https://api.telegram.org/bot${bottoken}/sendMessage`;
-    const text = `📱 **腾讯手机管家短信转发**\n发件人: \`${smsData.sender}\`\n内  容: ${smsData.message}`;
+    const text = `📱 短信转发: ${smsData.message}`;
     
     return sendHttpRequest(url, JSON.stringify({ chat_id: chatid, text: text, parse_mode: 'Markdown' }), 'Telegram');
 }
@@ -128,7 +127,7 @@ function sendToFeishu(feishuInput, smsData) {
     
     console.log(`📍 飞书最终请求地址: ${url}`); 
     
-    const text = `📱 腾讯手机管家短信转发\n发件人: ${smsData.sender}\n内容: ${smsData.message}`;
+    const text = `📱 短信转发: ${smsData.message}`;
     return sendHttpRequest(url, JSON.stringify({ msg_type: 'text', content: { text: text } }), '飞书');
 }
 
