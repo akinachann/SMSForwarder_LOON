@@ -1,8 +1,8 @@
-// 获取腾讯手机管家短信转发脚本 v2.4.2 (纯净双通道防弹版)
-// 作者: akinachan&Gemini&Claude
+// 获取腾讯手机管家短信转发脚本 v2.5.0 (双通道防弹 + TG反代支持版)
+// 作者: akinachan & Gemini & Claude
 
-const SCRIPT_VERSION = '2.4.2';
-const SCRIPT_DATE = '2026-03-26';
+const SCRIPT_VERSION = '2.5.0';
+const SCRIPT_DATE = '2026-03-31';
 
 console.log(`📱 短信转发脚本启动 v${SCRIPT_VERSION} (${SCRIPT_DATE})`);
 
@@ -100,19 +100,42 @@ function getSmsData() {
     return { sender: '10086', message: '【测试】您的验证码是123456，请在5分钟内输入。' };
 }
 
-// 发送到 Telegram
-function sendToTelegram(tokenkey, smsData) {
-    const lastDot = tokenkey.lastIndexOf('.');
-    if (lastDot === -1) {
-        console.log('❌ Telegram Token 格式错误');
-        return Promise.resolve();
+// 发送到 Telegram (支持反代链接)
+function sendToTelegram(tgInput, smsData) {
+    let url = "";
+    let chatid = "";
+    const input = tgInput.trim();
+
+    if (input.startsWith('http')) {
+        // --- 模式：自定义反代链接 ---
+        // 支持格式: https://domain.com/path/sendMessage#ChatID
+        if (input.includes('#')) {
+            const parts = input.split('#');
+            url = parts[0];
+            chatid = parts[1];
+        } else {
+            url = input;
+        }
+    } else {
+        // --- 模式：标准 Token.ChatID ---
+        const lastDot = input.lastIndexOf('.');
+        if (lastDot === -1) {
+            console.log('❌ Telegram Token 格式错误');
+            return Promise.resolve();
+        }
+        const bottoken = input.substring(0, lastDot).trim();
+        chatid = input.substring(lastDot + 1).trim();
+        url = `https://api.telegram.org/bot${bottoken}/sendMessage`;
     }
-    const bottoken = tokenkey.substring(0, lastDot).trim();
-    const chatid = tokenkey.substring(lastDot + 1).trim();
-    const url = `https://api.telegram.org/bot${bottoken}/sendMessage`;
+
     const text = `📱 短信转发: ${smsData.message}`;
-    
-    return sendHttpRequest(url, JSON.stringify({ chat_id: chatid, text: text, parse_mode: 'Markdown' }), 'Telegram');
+    const payload = {
+        text: text,
+        parse_mode: 'Markdown'
+    };
+    if (chatid) payload.chat_id = chatid;
+
+    return sendHttpRequest(url, JSON.stringify(payload), 'Telegram');
 }
 
 // 发送到飞书机器人
