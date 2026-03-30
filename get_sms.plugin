@@ -13,7 +13,7 @@ update-interval = 86400
 timeout = 30
 
 [Argument]
-tg_token = input,"格式为：123456789:AAFxxxxxxx.-100123456789",tag=Telegram配置,desc=格式为: BotToken.ChatID (留空则不转发到Telegram)
+tg_token = input,"",tag=Telegram配置,desc=标准: Token.ChatID | 反代: 完整反代URL#ChatID (如: https://.../sendMessage#-100123)
 feishu_token = input,"",tag=飞书配置,desc=填入完整的飞书Webhook地址 (留空则不转发到飞书)
 
 allsms = switch,true,tag=转发所有短信,desc=开启则转发所有短信，关闭则仅转发匹配正则的短信
