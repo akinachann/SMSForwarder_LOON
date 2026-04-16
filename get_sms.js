@@ -1,7 +1,9 @@
-// 获取腾讯手机管家短信转发脚本 v2.6.3
-// 作者: akinachan & Gemini & Claude
+// 获取腾讯手机管家短信转发脚本 v2.6.4
+// 作者: akinachan
 
-const SCRIPT_VERSION = '2.6.3';
+const SCRIPT_VERSION = '2.6.4';
+
+console.log(`🚀 短信转发脚本启动 v${SCRIPT_VERSION}`);
 
 const args = typeof $argument !== 'undefined' ? $argument : {};
 
@@ -31,24 +33,48 @@ function checkSenderFilter(sender) {
 // 主函数
 async function main() {
     let smsData = getSmsData();
-    if (!smsData) return $done();
+    if (!smsData) {
+        console.log('❌ 未获取到有效短信数据，脚本结束。');
+        return $done();
+    }
     
-    if (!checkSenderFilter(smsData.sender)) return $done();
-    if (!allsms && !new RegExp(regexstr).test(smsData.message)) return $done();
+    if (!checkSenderFilter(smsData.sender)) {
+        console.log(`拦截: 发信人 [${smsData.sender}] 不在允许列表中。`);
+        return $done();
+    }
+    if (!allsms && !new RegExp(regexstr).test(smsData.message)) {
+        console.log('拦截: 短信内容不包含验证码关键字。');
+        return $done();
+    }
 
+    console.log(`✅ 准备转发短信，发信人: [${smsData.sender}]`);
     let tasks = [];
 
-    if (tgToken) tasks.push(sendToTelegram(tgToken, smsData));
-    if (feishuToken) tasks.push(sendToFeishu(feishuToken, smsData));
-    if (webhook1) tasks.push(sendToWebhook(webhook1, smsData, 'Webhook-1'));
-    if (webhook2) tasks.push(sendToWebhook(webhook2, smsData, 'Webhook-2'));
+    if (tgToken) {
+        console.log('📤 准备发送至: Telegram...');
+        tasks.push(sendToTelegram(tgToken, smsData));
+    }
+    if (feishuToken) {
+        console.log('📤 准备发送至: 飞书...');
+        tasks.push(sendToFeishu(feishuToken, smsData));
+    }
+    if (webhook1) {
+        console.log('📤 准备发送至: Webhook 通道 1...');
+        tasks.push(sendToWebhook(webhook1, smsData, 'Webhook-1'));
+    }
+    if (webhook2) {
+        console.log('📤 准备发送至: Webhook 通道 2...');
+        tasks.push(sendToWebhook(webhook2, smsData, 'Webhook-2'));
+    }
 
     if (tasks.length === 0) {
-        if (debugMode) $notification.post('转发取消', '未配置目标', '请配置Token或UUID');
+        console.log('⚠️ 未配置任何转发目标 Token 或 UUID。');
+        if (debugMode) $notification.post('转发取消', '未配置目标', '请在插件中配置参数');
         return $done();
     }
 
     await Promise.all(tasks);
+    console.log('🎉 所有启用的通道任务已执行完毕！');
     $done();
 }
 
@@ -64,10 +90,11 @@ function getSmsData() {
                 };
             }
         } catch (error) {
-            console.log('❌ 解析失败:', error);
+            console.log('❌ JSON 解析失败:', error);
         }
     }
-    return { sender: '测试', message: '【测试】您的验证码是123456。' };
+    console.log('⚠️ 当前为测试模式或空请求');
+    return { sender: '测试发信人', message: '【测试】您的验证码是123456。' };
 }
 
 // Webhook 通道 (NotifyMe)
@@ -81,7 +108,7 @@ function sendToWebhook(input, smsData, platformName) {
             "data": {
                 "title": smsData.sender,
                 "body": smsData.message,
-                "group": "🍎🎈 短信转发",
+                "group": "🎈 短信转发",
                 "bigText": true
             }
         }
@@ -107,7 +134,7 @@ function sendToTelegram(tgInput, smsData) {
         url = `https://api.telegram.org/bot${bottoken}/sendMessage`;
     }
 
-    const payload = { text: `🍎🎈 短信转发: ${smsData.message}`, parse_mode: 'Markdown' };
+    const payload = { text: `🎈 短信转发: ${smsData.message}`, parse_mode: 'Markdown' };
     if (chatid) payload.chat_id = chatid;
 
     return sendHttpRequest(url, JSON.stringify(payload), 'Telegram');
@@ -118,11 +145,11 @@ function sendToFeishu(feishuInput, smsData) {
     let url = feishuInput.trim(); 
     if (!url.startsWith('http')) url = `https://open.feishu.cn/open-apis/bot/v2/hook/${url.replace(/^hook\//, '')}`;
     
-    const payload = { msg_type: 'text', content: { text: `🍎🎈 短信转发: ${smsData.message}` } };
+    const payload = { msg_type: 'text', content: { text: `🎈 短信转发: ${smsData.message}` } };
     return sendHttpRequest(url, JSON.stringify(payload), '飞书');
 }
 
-// 核心网络请求
+// 核心网络请求 (带完整日志)
 function sendHttpRequest(url, body, platformName, currentRetry = 0) {
     return new Promise((resolve) => {
         const requestConfig = {
@@ -135,15 +162,24 @@ function sendHttpRequest(url, body, platformName, currentRetry = 0) {
 
         $httpClient.post(requestConfig, function(error, response, data) {
             if (error) {
+                console.log(`💥 [${platformName}] 请求失败:`, error);
                 if (currentRetry < retryCount - 1) {
+                    console.log(`🔄 [${platformName}] 准备重试 (${currentRetry + 1}/${retryCount - 1})...`);
                     setTimeout(() => resolve(sendHttpRequest(url, body, platformName, currentRetry + 1)), 2000);
                 } else {
-                    if (debugMode) $notification.post(`${platformName} 失败`, '', String(error));
+                    console.log(`❌ [${platformName}] 最终重试失败。`);
+                    if (debugMode) $notification.post(`${platformName} 转发失败`, '', String(error));
                     resolve(false);
                 }
             } else {
                 const statusCode = response?.status || response?.statusCode || 200;
-                resolve(statusCode >= 200 && statusCode < 300);
+                if (statusCode >= 200 && statusCode < 300) {
+                    console.log(`✅ [${platformName}] 推送成功！`);
+                    resolve(true);
+                } else {
+                    console.log(`⚠️ [${platformName}] 推送异常，状态码: ${statusCode}`);
+                    resolve(false);
+                }
             }
         });
     });
