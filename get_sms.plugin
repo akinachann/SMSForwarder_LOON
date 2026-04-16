@@ -6,17 +6,17 @@
 #!homePage = https://github.com/akinachann/SMSForwarder_LOON
 
 [Argument]
-tg_token = input,"",tag=Telegram配置,desc=标准: Token.ChatID | 反代: 完整反代URL#ChatID
-feishu_token = input,"",tag=飞书配置,desc=填入完整的飞书Webhook地址
-webhook_url_1 = input,"",tag=Webhook通道 1,desc=填入NotifyMe第一个UUID
-webhook_url_2 = input,"",tag=Webhook通道 2,desc=填入NotifyMe第二个UUID
+tg_token = input,"",tag=Token.ChatID
+feishu_token = input,"",tag=飞书完整链接或仅token
+webhook_url_1 = input,"",tag=notifyme的UUID
+webhook_url_2 = input,"",tag=notifyme的UUID
 
-allsms = switch,true,tag=转发所有短信,desc=开启则转发所有短信
-regexstr = input,"码|碼|code|\\d{4,}",tag=正则匹配规则,desc=用于匹配验证码短信的正则表达式
-sender_filter = input,"",tag=发信人号码过滤,desc=只转发指定发信人的短信
-debug_mode = switch,false,tag=调试模式,desc=开启后显示详细的调试信息和通知
-retry_count = select,"1","2","3",tag=重试次数,desc=网络请求失败时的重试次数
-timeout_seconds = select,"10","20","30",tag=请求超时,desc=网络请求的超时时间（秒）
+allsms = switch,true,tag=转发所有短信 (关闭则仅按正则转发)
+regexstr = input,"码|碼|code|\\d{4,}",tag=正则匹配规则 (用于提取验证码)
+sender_filter = input,"",tag=发信人号码过滤 (多个用逗号分隔)
+debug_mode = switch,false,tag=调试模式 (日常使用建议关闭)
+retry_count = select,"1","2","3",tag=网络失败重试次数
+timeout_seconds = select,"10","20","30",tag=请求超时时间(秒)
 
 [Script]
 # 注意这里的 argument 顺序：tg_token, feishu_token, webhook_url_1, webhook_url_2, 然后是后面的参数
