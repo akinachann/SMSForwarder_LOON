@@ -1,9 +1,11 @@
 #!name = 短信转发Loon版(iOS<17)
 #!desc = MitM->腾讯手机管家->获取短信->转发
 #!author = akinachan
-#!version = 2.6.2
+#!version = 2.6.4
 #!date = 2026-04-16
 #!homePage = https://github.com/akinachann/SMSForwarder_LOON
+#!icon = https://raw.githubusercontent.com/pppscn/SmsForwarder/refs/heads/main/pic/SmsForwarder.png
+#!tag = 短信转发, 验证码, 自动化
 
 [Argument]
 tg_token = input,"",tag=电报Token.ChatID
