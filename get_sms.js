@@ -108,7 +108,7 @@ function sendToWebhook(input, smsData, platformName) {
             "data": {
                 "title": smsData.sender,
                 "body": smsData.message,
-                "group": "🎈 短信转发",
+                "group": "🍎🎈 短信转发",
                 "bigText": true
             }
         }
@@ -134,7 +134,7 @@ function sendToTelegram(tgInput, smsData) {
         url = `https://api.telegram.org/bot${bottoken}/sendMessage`;
     }
 
-    const payload = { text: `🎈 短信转发: ${smsData.message}`, parse_mode: 'Markdown' };
+    const payload = { text: `🍎🎈 短信转发: ${smsData.message}`, parse_mode: 'Markdown' };
     if (chatid) payload.chat_id = chatid;
 
     return sendHttpRequest(url, JSON.stringify(payload), 'Telegram');
@@ -145,7 +145,7 @@ function sendToFeishu(feishuInput, smsData) {
     let url = feishuInput.trim(); 
     if (!url.startsWith('http')) url = `https://open.feishu.cn/open-apis/bot/v2/hook/${url.replace(/^hook\//, '')}`;
     
-    const payload = { msg_type: 'text', content: { text: `🎈 短信转发: ${smsData.message}` } };
+    const payload = { msg_type: 'text', content: { text: `🍎🎈 短信转发: ${smsData.message}` } };
     return sendHttpRequest(url, JSON.stringify(payload), '飞书');
 }
 
